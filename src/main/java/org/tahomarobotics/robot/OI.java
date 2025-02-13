@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import org.tahomarobotics.robot.chassis.Chassis;
 import org.tahomarobotics.robot.chassis.ChassisCommands;
+import org.tahomarobotics.robot.climber.Climber;
+import org.tahomarobotics.robot.climber.commands.ClimberCommands;
 import org.tahomarobotics.robot.collector.Collector;
 import org.tahomarobotics.robot.collector.CollectorCommands;
 import org.tahomarobotics.robot.elevator.Elevator;
@@ -39,11 +41,12 @@ public class OI extends SubsystemIF {
     // -- Subsystems --
 
     private final Indexer indexer = Indexer.getInstance();
+    private final Climber climber = Climber.getInstance();
     private final Collector collector = Collector.getInstance();
     private final Chassis chassis = Chassis.getInstance();
     private final Elevator elevator = Elevator.getInstance();
 
-    private final List<SubsystemIF> subsystems = List.of(indexer, collector, chassis, elevator);
+    private final List<SubsystemIF> subsystems = List.of(indexer, collector, chassis, elevator, climber);
 
     // -- Controllers --
 
@@ -104,6 +107,8 @@ public class OI extends SubsystemIF {
         controller.a().onTrue(Commands.runOnce(
             () -> elevator.setElevatorHeight(ElevatorConstants.ELEVATOR_LOW_POSE)
         ));
+
+        controller.start().onTrue(ClimberCommands.getClimberCommand());
     }
 
     public void setDefaultCommands() {

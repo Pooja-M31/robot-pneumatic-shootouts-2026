@@ -6,6 +6,7 @@ import edu.wpi.first.epilogue.NotLogged;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.tahomarobotics.robot.chassis.Chassis;
+import org.tahomarobotics.robot.climber.Climber;
 import org.tahomarobotics.robot.collector.Collector;
 import org.tahomarobotics.robot.elevator.Elevator;
 import org.tahomarobotics.robot.indexer.Indexer;
@@ -30,6 +31,8 @@ public class Robot extends TimedRobot {
     private final Collector collector = Collector.getInstance();
     @Logged(name = "Indexer")
     private final Indexer indexer = Indexer.getInstance();
+    @Logged(name = "Climber")
+    private final Climber climber = Climber.getInstance();
     @Logged(name = "OI")
     private final OI oi = OI.getInstance();
 
@@ -40,6 +43,7 @@ public class Robot extends TimedRobot {
         elevator.initialize(),
         indexer.initialize(),
         collector.initialize(),
+        climber.initialize(),
         oi.initialize()
     );
 
