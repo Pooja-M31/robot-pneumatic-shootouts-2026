@@ -1,6 +1,7 @@
 package org.tahomarobotics.robot.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
@@ -11,11 +12,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.RobotBase;
 import org.photonvision.simulation.SimCameraProperties;
-
-import java.io.IOException;
 
 /** Constants for the {@link Vision} subsystem. */
 public class VisionConstants {
@@ -27,44 +24,38 @@ public class VisionConstants {
      * The AprilTag field layout for whatever field we are on. See {@link AprilTagCamera}'s JavaDoc for more information
      * on how to calculate this properly.
      */
-    public static final AprilTagFieldLayout FIELD_LAYOUT;
+    public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-    static {
-        String path = Filesystem.getOperatingDirectory() + (RobotBase.isReal() ? "" : "/src/main") + "/deploy/custom.json";
-        try {
-            FIELD_LAYOUT = new AprilTagFieldLayout(path);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    // Loading custom apriltag layout (for use with WPICal)
+//    static {
+//        try {
+//            String fieldLayoutPath = RobotBase.isReal() ?
+//                Filesystem.getOperatingDirectory() + "/deploy/2025-reefscape.json" :
+//                Filesystem.getOperatingDirectory() + "\\src\\main\\deploy\\2025-reefscape.json";
+//            FIELD_LAYOUT = new AprilTagFieldLayout(fieldLayoutPath);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 
     // Cameras
 
-    // NOTE: X and Y are swapped here because our estimations had it swapped - if this causes issues, swap them back.
+    // These values are from CAD and may not reflect real life position
 
-    public final static CameraConfiguration COLLECTOR_RIGHT = new CameraConfiguration(
-        "Collector Right",
+    public final static CameraConfiguration COLLECTOR_SIDE = new CameraConfiguration(
+        "Collector Side",
         new Transform3d(
-            new Translation3d(Units.inchesToMeters(7.15), Units.inchesToMeters(-3.28), Units.inchesToMeters(25.75)),
-            new Rotation3d(0, Units.degreesToRadians(-15), 0)
+            new Translation3d(0.13522837777536, 0.2286, 0.75736194111635 + 0.041),
+            new Rotation3d(0, Units.degreesToRadians(28.36904629327858), 0)
         ),
         StandardDeviationScaling.DEFAULT
     );
 
-    public final static CameraConfiguration SHOOTER_LEFT = new CameraConfiguration(
-        "Shooter Left",
+    public final static CameraConfiguration SCORING_SIDE = new CameraConfiguration(
+        "Scoring Side",
         new Transform3d(
-            new Translation3d(-0.13, 0.13, 0.65),
-            new Rotation3d(Units.degreesToRadians(1.24), Units.degreesToRadians(-28.13), Units.degreesToRadians(-202.90))
-        ),
-        StandardDeviationScaling.DEFAULT
-    );
-
-    public final static CameraConfiguration SHOOTER_RIGHT = new CameraConfiguration(
-        "Shooter Right",
-        new Transform3d(
-            new Translation3d(0.08, 0.11, 0.69),
-            new Rotation3d(Units.degreesToRadians(0.10), Units.degreesToRadians(-24.08), Units.degreesToRadians(-166.14))
+            new Translation3d(0.13522837777536 - 0.32, 0.2286, 0.78215000726482),
+            new Rotation3d(0, Units.degreesToRadians(40), Units.degreesToRadians(180))
         ),
         StandardDeviationScaling.DEFAULT
     );

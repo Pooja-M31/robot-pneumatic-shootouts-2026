@@ -6,9 +6,10 @@ import org.tahomarobotics.robot.chassis.Chassis;
 import org.tahomarobotics.robot.util.SubsystemIF;
 
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A subsystem to consolidate vision updates from multiple AprilTag cameras. Currently, only PhotonVision cameras
@@ -25,21 +26,19 @@ public class Vision extends SubsystemIF implements AutoCloseable {
 
     // Cameras
 
-//    @Logged
-//    private final AprilTagCamera collectorRightAprilTagCamera =
-//        new AprilTagCamera(VisionConstants.COLLECTOR_RIGHT, VisionConstants.simOV9782Properties, estimationCallback);
-//    @Logged
-//    private final AprilTagCamera shooterLeftAprilTagCamera =
-//        new AprilTagCamera(VisionConstants.SHOOTER_LEFT, VisionConstants.simOV9782Properties, estimationCallback);
-//    @Logged
-//    private final AprilTagCamera shooterRightAprilTagCamera =
-//        new AprilTagCamera(VisionConstants.SHOOTER_RIGHT, VisionConstants.simOV9782Properties, estimationCallback);
+    @Logged
+    private final AprilTagCamera scoringSide =
+        new AprilTagCamera(VisionConstants.SCORING_SIDE, VisionConstants.simOV9782Properties, estimationCallback);
+    @Logged
+    private final AprilTagCamera collectorSide =
+        new AprilTagCamera(VisionConstants.COLLECTOR_SIDE, VisionConstants.simOV9782Properties, estimationCallback);
 
-    private final Map<String, AprilTagCamera> aprilTagCameras = Map.of();
-
-    // Threading
-
-    private final ExecutorService exec = Executors.newCachedThreadPool();
+    private final Map<String, AprilTagCamera> aprilTagCameras =
+        Stream.of(scoringSide, collectorSide)
+              .collect(Collectors.toMap(
+                  AprilTagCamera::getName,
+                  Function.identity()
+              ));
 
     // Diagnostic
 

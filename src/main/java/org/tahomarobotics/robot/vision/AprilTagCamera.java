@@ -6,13 +6,15 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N8;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonUtils;
 import org.photonvision.estimation.TargetModel;
 import org.photonvision.estimation.VisionEstimation;
 import org.photonvision.simulation.PhotonCameraSim;
@@ -26,6 +28,7 @@ import org.tahomarobotics.robot.chassis.Chassis;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -91,13 +94,31 @@ public class AprilTagCamera implements AutoCloseable {
 
     // Diagnostics
 
+    // Vision measurements that have been adjusted and are passed to the callback.
     @Logged
     private Pose2d multiTagPose = new Pose2d(), singleTagPose = new Pose2d();
+
+    // The raw 3d vision measurement from the camera before adjustments
+    @Logged
+    private Pose3d robotPose3d = new Pose3d();
+
+    // A list of the predicted positions for all AprilTags we are seeing
+    @Logged
+    private List<Pose3d> targetPoses = new ArrayList<>();
+
+    // The position of the camera relative to the field
+    @Logged
+    private Transform3d fieldToCamera = new Transform3d();
+
+    // The distance of the camera from the current target.
+    // multitTagAvgDist is the average distance from all currently seen targets.
+    @Logged
+    private double singleTagCameraToTagDist, multiTagAvgDist;
 
     @Logged(importance = Logged.Importance.DEBUG)
     private int failedUpdates;
     @Logged(importance = Logged.Importance.DEBUG)
-    private int singleTagUpdates, multiTagUpdates;
+    private int singleTagUpdates = 0, multiTagUpdates = 0;
     @Logged(importance = Logged.Importance.DEBUG)
     private double estimationTime, photonvisionLatency, processingTime;
 
@@ -138,6 +159,8 @@ public class AprilTagCamera implements AutoCloseable {
             distortionCoefficients = simProperties.getDistCoeffs(); // ^
         }
 
+        SmartDashboard.putNumber("Pose Rotation", 0);
+
         notifier.startPeriodic(Robot.kDefaultPeriod);
     }
 
@@ -175,46 +198,99 @@ public class AprilTagCamera implements AutoCloseable {
             return Optional.empty();
         }
 
-        // CasADi pose estimation
+//        // CasADi pose estimation
+//        try {
+//            casadiPose3d = estimateCasADiPose(
+//                timestamp,
+//                targets
+//            );
+//        } catch (Exception e) {
+//            failedUpdates++;
+//
+//            logger.error(e.getMessage());
+//            return Optional.empty();
+//        }
 
-        Pose3d robotPose3d;
-        try {
-            robotPose3d = estimateCasADiPose(
-                timestamp,
-                targets
-            );
-        } catch (Exception e) {
-            failedUpdates++;
-
-            logger.error(e.getMessage());
-            return Optional.empty();
-        }
-
-        // Filter invalid estimates
-
-        if (!isInField(robotPose3d)) {
-            failedUpdates++;
-            return Optional.empty();
-        }
-
-        // Classify the estimation with corresponding standard deviations
-
-        Pose2d robotPose = robotPose3d.toPose2d();
-        double distance = result.getBestTarget().bestCameraToTarget.getTranslation().getDistance(new Translation3d());
+        Pose2d robotPose;// = casadiPose3d.toPose2d();
 
         EstimatedRobotPose.Type type;
         Vector<N3> stdDevs;
         if (targets.size() > 1) {
+            // Calculating average distance (for standard deviations)
+            multiTagAvgDist = 0;
+            for (PhotonTrackedTarget target : targets) {
+                multiTagAvgDist += target.getBestCameraToTarget().getTranslation().getNorm();
+            }
+            multiTagAvgDist /= targets.size();
+
+            // Photonvision pose estimation
+            fieldToCamera = result.getMultiTagResult().get().estimatedPose.best;
+            Transform3d fieldToRobot = fieldToCamera.plus(configuration.transform().inverse());
+            robotPose3d = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
+
+            // Filtering invalid pose estimates
+            if (!isInField(robotPose3d)) {
+                failedUpdates++;
+                return Optional.empty();
+            }
+
+            // Logging diagnostics and setting pose estimation
+            /*
+             * We override the heading measured from the camera estimation because we accept the gyro from the chassis
+             * as truth. When we don't do this, we see a spiraling pose from the pose estimator. We believe this is caused
+             * by the following: When the heading from a vision measurement doesn't match what the pose estimator previously
+             * believed to be the heading of the robot it attempts to compensate for the difference and change the heading.
+             * However, we override the pose estimator heading with the gyro heading in our estimated pose, so the pose estimator
+             * estimates a spiraling pose as it unsuccesfully attempts to adjust for the new heading by adjusting the position
+             * without adjusting the heading.
+             */
+            robotPose = new Pose2d(robotPose3d.toPose2d().getTranslation(), Chassis.getInstance().getPose().getRotation());
+            targetPoses = targets.stream().map(
+                target -> FIELD_LAYOUT.getTagPose(target.getFiducialId()).orElseThrow())
+                                 .toList();
+
+            // Setting vision measurement type and standard deviations
             type = EstimatedRobotPose.Type.MULTI_TAG;
             stdDevs = configuration.stdDevScaling()
-                                   .scaleStandardDeviations(BASE_MULTI_TAG_STD_DEV, distance, targets.size());
+                                   .scaleStandardDeviations(BASE_MULTI_TAG_STD_DEV, multiTagAvgDist, targets.size());
 
             multiTagPose = robotPose;
             multiTagUpdates++;
         } else {
+            // Calculating distance (for standard deviations)
+            singleTagCameraToTagDist = result.getBestTarget().bestCameraToTarget.getTranslation().getNorm();
+
+            // Photonvision position estimation
+            PhotonTrackedTarget tag = targets.get(0);
+            robotPose3d = PhotonUtils.estimateFieldToRobotAprilTag(
+                tag.getBestCameraToTarget(),
+                FIELD_LAYOUT.getTagPose(tag.getFiducialId()).orElseThrow(),
+                configuration.transform().inverse()
+            );
+
+            // Filtering invalid pose estimates
+            if (!isInField(robotPose3d)) {
+                failedUpdates++;
+                return Optional.empty();
+            }
+
+            // Logging diagnostics and setting pose estimation
+            /*
+             * We override the heading measured from the camera estimation because we accept the gyro from the chassis
+             * as truth. When we don't do this, we see a spiraling pose from the pose estimator. We believe this is caused
+             * by the following: When the heading from a vision measurement doesn't match what the pose estimator previously
+             * believed to be the heading of the robot it attempts to compensate for the difference and change the heading.
+             * However, we override the pose estimator heading with the gyro heading in our estimated pose, so the pose estimator
+             * estimates a spiraling pose as it unsuccesfully attempts to adjust for the new heading by adjusting the position
+             * without adjusting the heading.
+             */
+            robotPose = new Pose2d(robotPose3d.toPose2d().getTranslation(), Chassis.getInstance().getPose().getRotation());
+            targetPoses = List.of(FIELD_LAYOUT.getTagPose(tag.getFiducialId()).orElseThrow());
+
+            // Setting vision measurement type and standard deviations
             type = EstimatedRobotPose.Type.SINGLE_TAG;
             stdDevs = configuration.stdDevScaling()
-                                   .scaleStandardDeviations(BASE_SINGLE_TAG_STD_DEV, distance, targets.size());
+                                   .scaleStandardDeviations(BASE_SINGLE_TAG_STD_DEV, singleTagCameraToTagDist, targets.size());
 
             singleTagPose = robotPose;
             singleTagUpdates++;
@@ -267,7 +343,7 @@ public class AprilTagCamera implements AutoCloseable {
             HEADING_FREE,
             pose.getRotation(),
             GYRO_ERROR_SCALING_FACTOR
-        ).orElseThrow(() -> new Exception("Failed to estimate robot pose!"));
+        ).orElseGet(PnpResult::new);//.orElseThrow(() -> new Exception("Failed to estimate robot pose!"));
 
         // Add the resulting transform to the field origin
         return new Pose3d().plus(casADiResult.best);
