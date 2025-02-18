@@ -25,6 +25,7 @@ import org.tahomarobotics.robot.RobotMap;
 import org.tahomarobotics.robot.util.RobustConfigurator;
 import org.tahomarobotics.robot.util.SubsystemIF;
 import org.tahomarobotics.robot.util.persistent.CalibrationData;
+import org.tahomarobotics.robot.util.signals.LoggedStatusSignal;
 import org.tahomarobotics.robot.util.sysid.SysIdTests;
 import org.tahomarobotics.robot.windmill.commands.WindmillCommands;
 import org.tahomarobotics.robot.windmill.commands.WindmillMoveCommand;
@@ -55,6 +56,9 @@ public class Windmill extends SubsystemIF {
     private final StatusSignal<Angle> elevatorPosition, armPosition;
     private final StatusSignal<AngularVelocity> elevatorVelocity, armVelocity;
     private final StatusSignal<Current> elevatorCurrent, armCurrent;
+
+    @Logged
+    private final LoggedStatusSignal.List statusSignals;
 
     // Control Requests
 
@@ -124,14 +128,22 @@ public class Windmill extends SubsystemIF {
         armVelocity = armMotor.getVelocity();
         armCurrent = armMotor.getSupplyCurrent();
 
-        BaseStatusSignal.setUpdateFrequencyForAll(
-            RobotConfiguration.MECHANISM_UPDATE_FREQUENCY,
-            elevatorPosition, elevatorVelocity, elevatorCurrent,
-            armPosition, armVelocity, armCurrent,
-            elevatorEncoder.getPosition(), elevatorEncoder.getVelocity(),
-            armEncoder.getPosition(), armEncoder.getVelocity(),
-            elevatorLeftMotor.getMotorVoltage(), armMotor.getMotorVoltage()
-        );
+        statusSignals = new LoggedStatusSignal.List(List.of(
+            new LoggedStatusSignal("Elevator Position", elevatorPosition),
+            new LoggedStatusSignal("Elevator Velocity", elevatorVelocity),
+            new LoggedStatusSignal("Elevator Current", elevatorCurrent),
+            new LoggedStatusSignal("Arm Position", armPosition),
+            new LoggedStatusSignal("Arm Velocity", armVelocity),
+            new LoggedStatusSignal("Arm Current", armCurrent),
+            new LoggedStatusSignal("Elevator Encoder Position", elevatorEncoder.getPosition()),
+            new LoggedStatusSignal("Elevator Encoder Velocity", elevatorEncoder.getVelocity()),
+            new LoggedStatusSignal("Arm Encoder Position", armEncoder.getPosition()),
+            new LoggedStatusSignal("Arm Encoder Velocity", armEncoder.getVelocity()),
+            new LoggedStatusSignal("Elevator Left Motor Voltage", elevatorLeftMotor.getMotorVoltage()),
+            new LoggedStatusSignal("Arm Motor Voltage", armMotor.getMotorVoltage())
+        ));
+
+        statusSignals.setUpdateFrequencyForAll(RobotConfiguration.MECHANISM_UPDATE_FREQUENCY);
 
         ParentDevice.optimizeBusUtilizationForAll(
             elevatorLeftMotor, elevatorRightMotor, elevatorEncoder, armMotor, armEncoder);
@@ -210,10 +222,6 @@ public class Windmill extends SubsystemIF {
         return getWindmillPosition().getY();
     }
 
-    public List<BaseStatusSignal> getStatusSignals() {
-        return List.of(elevatorPosition, armPosition, elevatorVelocity, armVelocity, elevatorCurrent, armCurrent);
-    }
-
     public WindmillState getCurrentState() {
         WindmillState.ElevatorState elevatorState = new WindmillState.ElevatorState(
             elevatorPosition.getValueAsDouble(),
@@ -272,16 +280,6 @@ public class Windmill extends SubsystemIF {
     @Logged(name = "armTarget")
     public double getArmTarget() {
         return targetAngle;
-    }
-
-    @Logged(name = "armVelocity")
-    public double getArmVelocity() {
-        return armVelocity.getValueAsDouble();
-    }
-
-    @Logged(name = "armCurrent")
-    public double getArmCurrent() {
-        return armCurrent.getValueAsDouble();
     }
 
     @Logged
@@ -382,9 +380,29 @@ public class Windmill extends SubsystemIF {
 
     @Override
     public void onTeleopInit() {
-        setElevatorHeight(ELEVATOR_LOW_POSE);
-        setArmPosition(0.25);
-        setTargetState(TrajectoryState.STOW);
+        double angle = MathUtil.inputModulus(getArmPosition(), 0, 1);
+        Logger.info("Starting arm angle: {} rotations", angle);
+        if (angle > 0.5 && angle < 0.85) {
+            WindmillState collectState;
+            try {
+                collectState = WindmillKinematics.inverseKinematics(0, TrajectoryState.COLLECT.t2d, null, false);
+            } catch (WindmillKinematics.KinematicsException e) {
+                Logger.error("Cannot go to collect! This is a bug: {}", e);
+                return;
+            }
+            setState(collectState);
+            setTargetState(TrajectoryState.COLLECT);
+        } else {
+            WindmillState stowState;
+            try {
+                stowState = WindmillKinematics.inverseKinematics(0, TrajectoryState.STOW.t2d, null);
+            } catch (WindmillKinematics.KinematicsException e) {
+                Logger.error("Cannot go to stow! This is a bug: {}", e);
+                return;
+            }
+            setState(stowState);
+            setTargetState(TrajectoryState.STOW);
+        }
     }
 
     @Override

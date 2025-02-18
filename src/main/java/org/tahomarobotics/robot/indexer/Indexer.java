@@ -95,8 +95,8 @@ public class Indexer extends SubsystemIF {
     private void stateMachine() {
         switch (state) {
             case COLLECTING -> {
-                if (beamBreakTripped() && isArmAtPassing()) transitionToPassing();
-                if (beamBreakTripped() && !isArmAtPassing()) transitionToHolding();
+//                if (beamBreakTripped() && isArmAtPassing()) transitionToPassing();
+//                if (beamBreakTripped() && !isArmAtPassing()) transitionToHolding();
             }
             case PASSING -> {
                 if (!beamBreakTripped()) {

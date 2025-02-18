@@ -34,7 +34,7 @@ public class WindmillMoveCommand extends Command {
     // Command
 
     private WindmillMoveCommand(Pair<TrajectoryState, TrajectoryState> fromTo, WindmillTrajectory trajectory) {
-         Logger.info("Created move command from {} to {}.", fromTo.getFirst(), fromTo.getSecond());
+        Logger.info("Created move command from {} to {}.", fromTo.getFirst(), fromTo.getSecond());
 
         this.fromTo = fromTo;
         this.trajectory = trajectory;
@@ -50,8 +50,11 @@ public class WindmillMoveCommand extends Command {
             return;
         }
 
-        if (!(windmill.isArmAtPosition() && windmill.isElevatorAtPosition())) {
-            Logger.error("Windmill was not within tolerance for starting state!");
+        if (!windmill.isAtTargetState()) {
+            Logger.error(
+                "Windmill was not within tolerance for starting state! Arm was at ({}, {}) but needs to be at ({}, {})", windmill.getWindmillPositionX(),
+                windmill.getWindmillPositionY(), fromTo.getFirst().t2d.getX(), fromTo.getFirst().t2d.getY()
+            );
             cancel();
             return;
         }

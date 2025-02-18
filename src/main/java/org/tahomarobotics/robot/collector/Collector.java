@@ -229,9 +229,9 @@ public class Collector extends SubsystemIF {
                 if (collectorCurrent.getValueAsDouble() > ALGAE_HOLDING_CURRENT_THRESHOLD && collectionMode == GamePiece.ALGAE) {
                     collectorTransitionToHolding();
                 }
-                if (indexer.beamBreakTripped()){
-                    collectorTransitionToDisabled();
-                }
+//                if (indexer.beamBreakTripped()){
+//                    collectorTransitionToDisabled();
+//                }
             }
         }
     }

@@ -6,7 +6,7 @@ import java.util.*;
 import java.util.function.Function;
 
 public class ImmutableLazyOptionalMap<K, V> {
-    private final List<K> keys;
+    private final List<K> keys, removedKeys = new ArrayList<>();
     private final Map<K, V> values = new HashMap<>();
 
     private final Function<K, Optional<V>> generator;
@@ -17,6 +17,11 @@ public class ImmutableLazyOptionalMap<K, V> {
     }
 
     public Optional<V> get(K key) {
+        if (removedKeys.contains(key)) {
+            Logger.error("Initial key '{}' produced an invalid value! Removed from key list.", key);
+            return Optional.empty();
+        }
+
         if (!keys.contains(key)) {
             return Optional.empty();
         }
@@ -29,6 +34,7 @@ public class ImmutableLazyOptionalMap<K, V> {
             } else {
                 Logger.error("Initial key '{}' produced an invalid value! Removing from key list.", key);
                 keys.remove(key);
+                removedKeys.add(key);
                 return Optional.empty();
             }
         } else {

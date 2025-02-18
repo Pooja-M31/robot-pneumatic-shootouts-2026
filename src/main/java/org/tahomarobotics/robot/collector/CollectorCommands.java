@@ -29,7 +29,7 @@ public class CollectorCommands {
     /** @return On true and on false commands. */
     public static Pair<Command, Command> createCollectorControlCommands(Collector collector) {
         Command onTrue = collector.runOnce(() -> {
-            if (collector.isDeploymentCollecting() && !collector.isHoldingAlgae() && !indexer.beamBreakTripped()) {
+            if (collector.isDeploymentCollecting() && !collector.isHoldingAlgae() /*&& !indexer.beamBreakTripped()*/) {
                 // TODO: Only if not coral collected (from indexer or arm).
                 collector.collectorTransitionToCollecting();
             }
