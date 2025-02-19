@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import org.tahomarobotics.robot.RobotConfiguration;
 import org.tahomarobotics.robot.RobotMap;
+import org.tahomarobotics.robot.util.identity.Identity;
 
 public class WindmillConstants {
     // -- Elevator --
@@ -29,7 +30,7 @@ public class WindmillConstants {
 
     // Gearing
 
-    public static final double ELEVATOR_GEAR_REDUCTION = 12d / 52d;
+    public static final double ELEVATOR_GEAR_REDUCTION;
 
     // Pulley
 
@@ -64,7 +65,7 @@ public class WindmillConstants {
 
     // Gearing
     public static final double ARM_BELT_REDUCTION = 18d / 72d;
-    public static final double ARM_GEAR_REDUCTION = 10d / 60d * 24d / 50d * ARM_BELT_REDUCTION;
+    public static final double ARM_GEAR_REDUCTION;
 
     // Poses
 
@@ -91,6 +92,21 @@ public class WindmillConstants {
 
     public static final double END_EFFECTOR_MIN_HEIGHT = -0.25; // Bottom-most point the carriage hits
     public static final double END_EFFECTOR_MAX_HEIGHT = ELEVATOR_MAX_POSE + ARM_LENGTH;
+
+    // -- Identity --
+
+    static {
+        switch (Identity.robotID) {
+            case BEEF, BEARRACUDA -> {
+                ELEVATOR_GEAR_REDUCTION = 10d / 52d;
+                ARM_GEAR_REDUCTION = 8d / 60d * 24d / 50d * ARM_BELT_REDUCTION;
+            }
+            default -> {
+                ELEVATOR_GEAR_REDUCTION = 12d / 52d;
+                ARM_GEAR_REDUCTION = 10d / 60d * 24d / 50d * ARM_BELT_REDUCTION;
+            }
+        }
+    }
 
     // -- Configurations --
 

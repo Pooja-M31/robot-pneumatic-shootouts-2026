@@ -3,6 +3,7 @@ package org.tahomarobotics.robot.grabber;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import org.tahomarobotics.robot.util.identity.Identity;
 
 public class GrabberConstants {
     public static final double COLLECT_VELOCITY = -10;
@@ -11,7 +12,14 @@ public class GrabberConstants {
 
     public static final double HOLDING_CURRENT_THRESHOLD = 20;
 
-    public static final double GEAR_REDUCTION = (10d / 26d);
+    public static final double GEAR_REDUCTION;
+
+    static {
+        switch (Identity.robotID) {
+            case BEEF, BEARRACUDA -> GEAR_REDUCTION = (8d / 26d);
+            default -> GEAR_REDUCTION = (10d / 26d);
+        }
+    }
 
     // -- States --
 

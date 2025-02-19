@@ -5,7 +5,6 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
-import org.tahomarobotics.robot.Main;
 import org.tahomarobotics.robot.util.identity.Identity;
 
 
@@ -30,6 +29,8 @@ public class CollectorConstants {
 
     // Zeroing
 
+    public static final double DEPLOY_ZERO_POSITION;
+
     public static final double DEPLOY_ZEROING_TIMEOUT = 5;
 
     public static final double DEPLOY_ZEROING_VOLTAGE = 1;
@@ -39,6 +40,15 @@ public class CollectorConstants {
 
     public static final double ALGAE_HOLDING_CURRENT_THRESHOLD = 30;
     private static final double ALGAE_HOLDING_VOLTAGE = 2;
+
+    // -- Identity --
+
+    static {
+        switch (Identity.robotID) {
+            case BEEF, BEARRACUDA -> DEPLOY_ZERO_POSITION = 103.75;
+            default -> DEPLOY_ZERO_POSITION = 83.75;
+        }
+    }
 
     /**
      * NOTE: The collector rollers do not all run at the same velocity,
@@ -73,7 +83,7 @@ public class CollectorConstants {
      * - Range of Motion: (~83, ~-21deg) from horizontal <p>
      */
     public enum TargetDeployState {
-        ZEROED(Units.degreesToRotations(Main.robotID == Identity.BEEF ? 103.75 : 83.75)),
+        ZEROED(Units.degreesToRotations(DEPLOY_ZERO_POSITION)),
         STOW(Units.degreesToRotations(75)),
         CORAL_COLLECT(Units.degreesToRotations(-20.75)),
         ALGAE_COLLECT(Units.degreesToRotations(0)),
