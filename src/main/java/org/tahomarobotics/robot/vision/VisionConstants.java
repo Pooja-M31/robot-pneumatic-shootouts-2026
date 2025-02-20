@@ -7,11 +7,11 @@ import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
 import org.photonvision.simulation.SimCameraProperties;
 
 /** Constants for the {@link Vision} subsystem. */
@@ -26,46 +26,13 @@ public class VisionConstants {
      */
     public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
-    // Loading custom apriltag layout (for use with WPICal)
-//    static {
-//        try {
-//            String fieldLayoutPath = RobotBase.isReal() ?
-//                Filesystem.getOperatingDirectory() + "/deploy/resources/2025-reefscape-welded.json" :
-//                Filesystem.getOperatingDirectory() + "\\src\\main\\deploy\\resources\\2025-reefscape-welded.json";
-//            FIELD_LAYOUT = new AprilTagFieldLayout(fieldLayoutPath);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
     // Cameras
-
-    // These values are from CAD and may not reflect real life position
-
-//    public final static CameraConfiguration COLLECTOR_SIDE = new CameraConfiguration(
-//        "Collector Side",
-//        new Transform3d(
-//            //new Translation3d(0.13522837777536, 0.2286, 0.75736194111635 + 0.041),
-//            new Translation3d(0,0,0.75736194111635 + 0.041),
-//            new Rotation3d(0, Units.degreesToRadians(28.36904629327858), 0)
-//        ),
-//        StandardDeviationScaling.DEFAULT
-//    );
-//
-//    public final static CameraConfiguration SCORING_SIDE = new CameraConfiguration(
-//        "Scoring Side",
-//        new Transform3d(
-//            new Translation3d(0.13522837777536 - 0.32, 0.2286, 0.78215000726482),
-//            new Rotation3d(0, Units.degreesToRadians(-40), Units.degreesToRadians(180))
-//        ),
-//        StandardDeviationScaling.DEFAULT
-//    );
 
     public final static CameraConfiguration ELEVATOR_SWERVE = new CameraConfiguration(
         "Elevator Swerve",
         new Transform3d(
-            new Translation3d(Units.inchesToMeters(10), Units.inchesToMeters(-11.675), 0.21),
-            new Rotation3d(0, Units.degreesToRadians(-9.97), Units.degreesToRadians(18))
+            new Translation3d(-0.25, 0.2971, 0.20),
+            new Rotation3d(new Quaternion(-0.08672828390630943, 0.06988593908540369, -0.01731288468135895, 0.9936269039799738))
         ),
         StandardDeviationScaling.DEFAULT
     );
@@ -73,16 +40,18 @@ public class VisionConstants {
     public final static CameraConfiguration CLIMBER_SWERVE = new CameraConfiguration(
         "Climber Swerve",
         new Transform3d(
-            new Translation3d(Units.inchesToMeters(10), Units.inchesToMeters(11.675), 0.21),
-            new Rotation3d(0, Units.degreesToRadians(-9.97), Units.degreesToRadians(-18))
+            new Translation3d(-0.25, -0.2971, 0.20),
+            new Rotation3d(new Quaternion(0.17379550957598747, 0.07964208982705674, 0.019307103639845842, 0.9813661366321145))
         ),
         StandardDeviationScaling.DEFAULT
     );
 
     // Standard Deviations
 
-    public static final Vector<N3> BASE_MULTI_TAG_STD_DEV = VecBuilder.fill(0.25, 0.25, Double.POSITIVE_INFINITY);
-    public static final Vector<N3> BASE_SINGLE_TAG_STD_DEV = VecBuilder.fill(0.25, 0.25, Double.POSITIVE_INFINITY);
+    public static final Vector<N3> BASE_MULTI_TAG_STD_DEV = VecBuilder.fill(0.25, 0.25, 0.5);
+    public static final Vector<N3> BASE_SINGLE_TAG_STD_DEV = VecBuilder.fill(0.75, 0.75, 1);
+
+    public static final double AMBIGUITY_THRESHOLD = 0.03;
 
     // Constraint Punishment
 

@@ -21,31 +21,30 @@ public class Vision extends SubsystemIF implements AutoCloseable {
 
     // State
 
-    private final Consumer<AprilTagCamera.EstimatedRobotPose> estimationCallback =
-        Chassis.getInstance()::processVisionUpdate;
+    private final Consumer<AprilTagCamera.EstimatedRobotPose> estimationCallback = Chassis.getInstance()::processVisionUpdate;
 
-    // Cameras
+    // Camera
 
     @Logged
     private final AprilTagCamera elevatorSwerve =
-        new AprilTagCamera(VisionConstants.ELEVATOR_SWERVE, VisionConstants.simOV9782Properties,
-                           estimationCallback);
+        new AprilTagCamera(
+            VisionConstants.ELEVATOR_SWERVE, VisionConstants.simOV9782Properties,
+            estimationCallback
+        );
 
     @Logged
     private final AprilTagCamera climberSwerve =
-        new AprilTagCamera(VisionConstants.CLIMBER_SWERVE, VisionConstants.simOV9782Properties,
-                           estimationCallback);
+        new AprilTagCamera(
+            VisionConstants.CLIMBER_SWERVE, VisionConstants.simOV9782Properties,
+            estimationCallback
+        );
 
     private final Map<String, AprilTagCamera> aprilTagCameras =
         Stream.of(elevatorSwerve, climberSwerve)
               .collect(Collectors.toMap(
                   AprilTagCamera::getName,
                   Function.identity()
-             ));
-
-    // Diagnostic
-
-    // TODO: Store necessary Subsystem-wide diagnostic values here (updates, etc.).
+              ));
 
     // Initialization
 

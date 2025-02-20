@@ -22,8 +22,8 @@ public class ChassisConstants {
     /** Length-wise distance between wheel centers in <strong>meters</strong> */
     private static final double WHEELBASE = Units.inchesToMeters(20.75);
 
-    private static final double HALF_TRACK_WIDTH = TRACK_WIDTH / 2;
-    private static final double HALF_WHEELBASE = WHEELBASE / 2;
+    public static final double HALF_TRACK_WIDTH = TRACK_WIDTH / 2;
+    public static final double HALF_WHEELBASE = WHEELBASE / 2;
 
     /** Approximate mass of the robot in <strong>kilograms</strong> */
     public static final double MASS = 52.1631;
