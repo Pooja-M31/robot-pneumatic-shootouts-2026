@@ -3,18 +3,20 @@ package org.tahomarobotics.robot;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.NotLogged;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.tahomarobotics.robot.auto.Autonomous;
 import org.tahomarobotics.robot.chassis.Chassis;
+import org.tahomarobotics.robot.util.shims.FauxWatchdog;
+import org.tahomarobotics.robot.windmill.Windmill;
 import org.tahomarobotics.robot.climber.Climber;
 import org.tahomarobotics.robot.collector.Collector;
 import org.tahomarobotics.robot.grabber.Grabber;
 import org.tahomarobotics.robot.indexer.Indexer;
 import org.tahomarobotics.robot.util.SubsystemIF;
-import org.tahomarobotics.robot.util.shims.FauxWatchdog;
 import org.tahomarobotics.robot.vision.Vision;
-import org.tahomarobotics.robot.windmill.Windmill;
 import org.tahomarobotics.robot.windmill.commands.WindmillTrajectories;
 import org.tinylog.Logger;
 
@@ -69,11 +71,25 @@ public class Robot extends TimedRobot {
 
 //        disableWatchdog(`this, IterativeRobotBase.class);
 //        disableWatchdog(CommandScheduler.getInstance(), CommandScheduler.class);
+        logCommandScheduler();
     }
 
     @Override
     public void robotPeriodic() {
         CommandScheduler.getInstance().run();
+    }
+
+    private void logCommandScheduler() {
+        CommandScheduler commandScheduler = CommandScheduler.getInstance();
+        commandScheduler.onCommandInitialize(command -> {
+            if (RobotState.isAutonomous()) Logger.info(command.getName() + " initialized!");
+        });
+        commandScheduler.onCommandFinish(command -> {
+            if (RobotState.isAutonomous()) Logger.info(command.getName() + " finished!");
+        });
+        commandScheduler.onCommandInterrupt(command -> {
+            if (RobotState.isAutonomous()) Logger.warn(command.getName() + " interrupted!");
+        });
     }
 
     // Disabled
@@ -91,7 +107,12 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         subsystems.forEach(SubsystemIF::onAutonomousInit);
-        autonomous.getSelectedAuto().schedule();
+        Command autoCommmand = autonomous.getSelectedAuto();
+        Logger.info("Running Auto: " + autoCommmand.getName());
+        autoCommmand.schedule();
+        if (!autoCommmand.isScheduled()) {
+            Logger.info(autoCommmand.getName() + " was canceled by another command before it ran.");
+        }
     }
 
     @Override

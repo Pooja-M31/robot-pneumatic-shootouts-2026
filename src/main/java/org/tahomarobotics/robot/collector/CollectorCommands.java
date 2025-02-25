@@ -6,7 +6,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import org.tahomarobotics.robot.indexer.Indexer;
 
 public class CollectorCommands {
-    static Command createZeroCommand(Collector collector) {
+    public static Command createZeroCommand(Collector collector) {
         return collector.runOnce(collector::setZeroingVoltage)
                         .andThen(Commands.waitSeconds(0.1))
                         .andThen(Commands.waitUntil(collector::isDeployStopped))
@@ -23,6 +23,13 @@ public class CollectorCommands {
             } else if (collector.isDeploymentCollecting()) {
                 collector.deploymentTransitionToStow();
             }
+        });
+    }
+
+    public static Command createAutoCollectCommand(Collector collector) {
+        return collector.runOnce(() -> {
+            collector.deploymentTransitionToCollect();
+            collector.collectorTransitionToCollecting();
         });
     }
 

@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import org.tahomarobotics.robot.chassis.Chassis;
 import org.tahomarobotics.robot.chassis.ChassisConstants;
 import org.tahomarobotics.robot.collector.Collector;
@@ -26,6 +27,7 @@ import org.tahomarobotics.robot.collector.CollectorCommands;
 import org.tahomarobotics.robot.grabber.Grabber;
 import org.tahomarobotics.robot.grabber.GrabberCommands;
 import org.tahomarobotics.robot.indexer.Indexer;
+import org.tahomarobotics.robot.indexer.IndexerCommands;
 import org.tahomarobotics.robot.util.SubsystemIF;
 import org.tahomarobotics.robot.windmill.Windmill;
 import org.tahomarobotics.robot.windmill.WindmillConstants;
@@ -83,12 +85,10 @@ public class Autonomous extends SubsystemIF {
         Windmill windmill = Windmill.getInstance();
         Indexer indexer = Indexer.getInstance();
 
-        Pair<Command,Command> collectorControlCommands = CollectorCommands.createCollectorControlCommands(collector);
-        NamedCommands.registerCommand("Toggle Collector Deploy and Collect",
-                                      CollectorCommands.createDeploymentControlCommand(collector)
-                                                       .andThen(Commands.either(collectorControlCommands.getFirst(),
-                                                                                collectorControlCommands.getSecond(),
-                                                                                collector::isDeploymentStowed)));
+        Pair<Command, Command> indexerCommands = IndexerCommands.createIndexerCommands(indexer);
+        NamedCommands.registerCommand("Collector Deploy and Collect", CollectorCommands.createAutoCollectCommand(collector)
+                                                                                       .alongWith(IndexerCommands.createIndexerCommands(indexer).getFirst()));
+        NamedCommands.registerCommand("Indexer Collect", indexerCommands.getFirst());
 
         NamedCommands.registerCommand("Calibrate Windmill", Commands.runOnce(windmill::calibrate)
                                                                     .andThen(Commands.waitUntil(windmill::isZeroed))
@@ -96,9 +96,11 @@ public class Autonomous extends SubsystemIF {
                                                                         windmill.setTargetState(WindmillConstants.TrajectoryState.START);
                                                                     })));
 
-        NamedCommands.registerCommand("Windmill to Collect", windmill.createTransitionCommand(WindmillConstants.TrajectoryState.COLLECT).andThen(
-            GrabberCommands.createGrabberCommands(grabber).getFirst())
-                                                                     .andThen(Commands.waitUntil(grabber::isHolding)));
+        NamedCommands.registerCommand("Zero Collector", CollectorCommands.createZeroCommand(collector));
+
+        NamedCommands.registerCommand("Windmill to Collect", Commands.waitSeconds(1).andThen(windmill.createTransitionCommand(WindmillConstants.TrajectoryState.COLLECT)).andThen(
+            GrabberCommands.createGrabberCommands(grabber).getFirst()));
+        NamedCommands.registerCommand("Wait for Windmill Collected", Commands.waitUntil(grabber::isHolding));
         Pair<Command, Command> grabberScoringCommands = GrabberCommands.createGrabberScoringCommands(grabber);
         NamedCommands.registerCommand("Grabber Score", grabberScoringCommands.getFirst()
                                                                              .andThen(Commands.waitSeconds(0.25))

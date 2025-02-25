@@ -16,44 +16,44 @@
     },
     {
       "anchor": {
-        "x": 2.963486842105263,
-        "y": 6.10328947368421
+        "x": 3.354769736842105,
+        "y": 5.9429276315789465
       },
       "prevControl": {
-        "x": 3.428266813296606,
-        "y": 5.978156404517311
+        "x": 3.741325025664414,
+        "y": 5.656128546323686
       },
       "nextControl": {
-        "x": 2.4631578947368418,
-        "y": 6.237993421052631
+        "x": 2.957072368421053,
+        "y": 6.23799342105263
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.7832236842105262,
-        "y": 7.20016447368421
+        "x": 1.988486842105263,
+        "y": 7.059046052631578
       },
       "prevControl": {
-        "x": 1.3213815789473684,
-        "y": 6.9243421052631575
+        "x": 1.7780554311306915,
+        "y": 6.829484513386589
       },
       "nextControl": {
-        "x": 2.2568665769021514,
-        "y": 7.483034534597264
+        "x": 2.2001644736842105,
+        "y": 7.289967105263157
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.130921052631579,
-        "y": 5.320723684210526
+        "x": 4.047532894736842,
+        "y": 5.295065789473683
       },
       "prevControl": {
-        "x": 3.9208041990749303,
-        "y": 5.684656750097149
+        "x": 3.8374160411801936,
+        "y": 5.658998855360307
       },
       "nextControl": null,
       "isLocked": false,
@@ -61,11 +61,25 @@
     }
   ],
   "rotationTargets": [],
-  "constraintZones": [],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 2.75,
+      "maxWaypointRelativePos": 3.0,
+      "constraints": {
+        "maxVelocity": 1.0,
+        "maxAcceleration": 1.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
   "pointTowardsZones": [
     {
       "fieldPosition": {
-        "x": 1.0,
+        "x": 1.5,
         "y": 8.0
       },
       "rotationOffset": 0.0,

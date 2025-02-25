@@ -11,6 +11,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import org.tahomarobotics.robot.RobotConfiguration;
 import org.tahomarobotics.robot.RobotMap;
@@ -283,9 +284,10 @@ public class Collector extends SubsystemIF {
 
     // -- Subsystem Overrides --
 
+
     @Override
     public SubsystemIF initialize() {
-        new Trigger(() -> RobotState.isEnabled() && !RobotState.isTest())
+        new Trigger(() -> RobotState.isEnabled() && !RobotState.isAutonomous())
             .onTrue(
                 CollectorCommands
                     .createZeroCommand(this)

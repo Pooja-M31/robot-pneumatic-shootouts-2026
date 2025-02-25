@@ -25,6 +25,112 @@
                 "data": {
                   "name": "Windmill to L4"
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Zero Collector"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Grabber Score"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "J-FR-K"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Collector Deploy and Collect"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Windmill to Collect"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Wait for Windmill Collected"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Windmill to L4"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Grabber Score"
+          }
+        },
+        {
+          "type": "parallel",
+          "data": {
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "K-FR-L"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Indexer Collect"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Windmill to Collect"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Wait for Windmill Collected"
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "Windmill to L4"
+                      }
+                    }
+                  ]
+                }
               }
             ]
           }
