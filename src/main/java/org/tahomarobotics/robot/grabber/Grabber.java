@@ -174,6 +174,13 @@ public class Grabber extends SubsystemIF {
         stateMachine();
     }
 
+    // -- Autonomous --
+
+    @Override
+    public void onAutonomousInit() {
+        transitionToHolding();
+    }
+
     // -- SysId --
 
     @Override

@@ -88,7 +88,30 @@
       "name": "Collect Coral"
     }
   ],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Windmill to Collect",
+      "waypointRelativePos": 0.8476716653512202,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Windmill to Collect"
+        }
+      }
+    },
+    {
+      "name": "Windmill to L4",
+      "waypointRelativePos": 2.4,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Windmill to L4"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 2.0,
     "maxAcceleration": 2.0,

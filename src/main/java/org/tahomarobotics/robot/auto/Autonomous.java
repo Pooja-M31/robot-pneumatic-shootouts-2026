@@ -98,15 +98,16 @@ public class Autonomous extends SubsystemIF {
 
         NamedCommands.registerCommand("Zero Collector", CollectorCommands.createZeroCommand(collector));
 
-        NamedCommands.registerCommand("Windmill to Collect", Commands.waitSeconds(1).andThen(windmill.createTransitionCommand(WindmillConstants.TrajectoryState.COLLECT)).andThen(
+        NamedCommands.registerCommand("Windmill to Collect", windmill.createTransitionCommand(WindmillConstants.TrajectoryState.COLLECT).andThen(
             GrabberCommands.createGrabberCommands(grabber).getFirst()));
         NamedCommands.registerCommand("Wait for Windmill Collected", Commands.waitUntil(grabber::isHolding));
+
         Pair<Command, Command> grabberScoringCommands = GrabberCommands.createGrabberScoringCommands(grabber);
         NamedCommands.registerCommand("Grabber Score", grabberScoringCommands.getFirst()
                                                                              .andThen(Commands.waitSeconds(0.25))
                                                                              .andThen(grabberScoringCommands.getSecond()));
-        NamedCommands.registerCommand("Windmill to L4",  Commands.runOnce(() -> Logger.info("moving windmill"))
-                                                                 .andThen(windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L4)));
+
+        NamedCommands.registerCommand("Windmill to L4", windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L4));
         NamedCommands.registerCommand("Windmill to L3", windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L3));
         NamedCommands.registerCommand("Windmill to L2", windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L2));
     }
