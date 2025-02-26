@@ -52,6 +52,7 @@ public class VisionConstants {
     public static final Vector<N3> BASE_SINGLE_TAG_STD_DEV = VecBuilder.fill(0.75, 0.75, 1);
 
     public static final double AMBIGUITY_THRESHOLD = 0.03;
+    public static final double DISTANCE_THRESHOLD = 1;
 
     // Constraint Punishment
 

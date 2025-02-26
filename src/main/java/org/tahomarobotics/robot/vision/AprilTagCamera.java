@@ -11,7 +11,11 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N8;
 import edu.wpi.first.wpilibj.Notifier;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonUtils;
 import org.photonvision.estimation.TargetModel;
@@ -104,6 +108,9 @@ public class AprilTagCamera implements AutoCloseable {
     @Logged(importance = Logged.Importance.DEBUG)
     private double estimationTime, photonvisionLatency, processingTime;
 
+    @Logged
+    private boolean rejectDistanceBased = false;
+
     // Initialization
 
     /**
@@ -142,6 +149,11 @@ public class AprilTagCamera implements AutoCloseable {
         }
 
         notifier.startPeriodic(Robot.kDefaultPeriod);
+
+        SmartDashboard.putData("Toggle Vision Rejection", Commands.runOnce(() -> rejectDistanceBased = !rejectDistanceBased));
+
+        new Trigger(RobotState::isEnabled)
+            .onTrue(Commands.runOnce(() -> rejectDistanceBased = true));
     }
 
     // Processing
@@ -269,6 +281,14 @@ public class AprilTagCamera implements AutoCloseable {
 
             singleTagPose = robotPose.toPose2d();
             singleTagUpdates++;
+        }
+
+        if (robotPose.toPose2d().getTranslation().getDistance(
+            Chassis.getInstance().getPose().getTranslation()
+        ) > DISTANCE_THRESHOLD && rejectDistanceBased
+        ) {
+            failedUpdates++;
+            return Optional.empty();
         }
 
         // Diagnostics

@@ -170,7 +170,7 @@ public class Autonomous extends SubsystemIF {
             if (!autoPaths.isEmpty()) {
                 PathPlannerPath firstPath = autoPaths.get(0);
                 Optional<Pose2d> startingPose = firstPath.getStartingHolonomicPose();
-                chassis.resetOdometry(startingPose.isPresent() ? startingPose.get() : new Pose2d());
+                chassis.resetOdometry(startingPose.orElseGet(Pose2d::new));
             }
             field.getObject("Trajectory").setTrajectory(convertToTrajectoryForDisplay(autoPaths));
         } catch (Exception e) {
