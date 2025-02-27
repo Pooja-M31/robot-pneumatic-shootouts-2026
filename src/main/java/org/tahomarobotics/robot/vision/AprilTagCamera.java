@@ -108,9 +108,6 @@ public class AprilTagCamera implements AutoCloseable {
     @Logged(importance = Logged.Importance.DEBUG)
     private double estimationTime, photonvisionLatency, processingTime;
 
-    @Logged
-    private boolean rejectDistanceBased = false;
-
     // Initialization
 
     /**
@@ -149,11 +146,6 @@ public class AprilTagCamera implements AutoCloseable {
         }
 
         notifier.startPeriodic(Robot.kDefaultPeriod);
-
-        SmartDashboard.putData("Toggle Vision Rejection", Commands.runOnce(() -> rejectDistanceBased = !rejectDistanceBased));
-
-        new Trigger(RobotState::isEnabled)
-            .onTrue(Commands.runOnce(() -> rejectDistanceBased = true));
     }
 
     // Processing
@@ -281,14 +273,6 @@ public class AprilTagCamera implements AutoCloseable {
 
             singleTagPose = robotPose.toPose2d();
             singleTagUpdates++;
-        }
-
-        if (robotPose.toPose2d().getTranslation().getDistance(
-            Chassis.getInstance().getPose().getTranslation()
-        ) > DISTANCE_THRESHOLD && rejectDistanceBased
-        ) {
-            failedUpdates++;
-            return Optional.empty();
         }
 
         // Diagnostics
