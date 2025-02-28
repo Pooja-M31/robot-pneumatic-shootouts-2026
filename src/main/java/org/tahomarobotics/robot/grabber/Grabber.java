@@ -12,13 +12,13 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.tahomarobotics.robot.RobotConfiguration;
 import org.tahomarobotics.robot.RobotMap;
+import org.tahomarobotics.robot.collector.Collector;
 import org.tahomarobotics.robot.indexer.Indexer;
 import org.tahomarobotics.robot.util.RobustConfigurator;
 import org.tahomarobotics.robot.util.SubsystemIF;
+import org.tahomarobotics.robot.util.game.GamePiece;
 import org.tahomarobotics.robot.util.signals.LoggedStatusSignal;
 import org.tahomarobotics.robot.util.sysid.SysIdTests;
-import org.tahomarobotics.robot.windmill.Windmill;
-import org.tahomarobotics.robot.windmill.WindmillConstants;
 
 import java.util.List;
 
@@ -102,8 +102,8 @@ public class Grabber extends SubsystemIF {
 
     private void stateMachine() {
         if (state == GrabberState.COLLECTING) {
-            if (current.getValueAsDouble() > COLLECTION_CURRENT_THRESHOLD && Windmill.getInstance()
-                                                                                     .getTargetTrajectoryState() == WindmillConstants.TrajectoryState.COLLECT) {
+            if (current.getValueAsDouble() > COLLECTION_CURRENT_THRESHOLD &&
+                Collector.getInstance().getCollectionMode() != GamePiece.ALGAE) {
                 collectionTimer.start();
             } else {
                 collectionTimer.stop();
