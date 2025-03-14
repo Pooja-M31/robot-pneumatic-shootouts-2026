@@ -156,12 +156,12 @@ public class Robot extends LoggedRobot {
 
         subsystems.forEach(SubsystemIF::onAutonomousInit);
 
-        Command autoCommmand = Autonomous.getInstance().getSelectedAuto();
-        Logger.info("Running Auto: " + autoCommmand.getName());
+        Command autoCommand = Autonomous.getInstance().getSelectedAuto();
+        Logger.info("Running Auto: " + autoCommand.getName());
 
-        autoCommmand.schedule();
-        if (!autoCommmand.isScheduled()) {
-            Logger.info(autoCommmand.getName() + " was canceled by another command before it ran.");
+        autoCommand.schedule();
+        if (!autoCommand.isScheduled()) {
+            Logger.info(autoCommand.getName() + " was canceled by another command before it ran.");
         }
 
         autoStartTime = Timer.getTimestamp();

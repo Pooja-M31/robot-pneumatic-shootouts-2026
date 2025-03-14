@@ -173,6 +173,42 @@ public class SystemCheck {
         );
     }
 
+    // Arm trajectories
+    public static Command createWindmillTrajectoryTestCommand(Windmill windmill) {
+        return Commands.race(
+            ensureNominal(
+                new Measurement("Elevator Left", windmill::getElevatorLeftCurrent, 1, 3),
+                new Measurement("Elevator Right", windmill::getElevatorRightCurrent, 1, 3),
+                new Measurement("Arm", windmill::getArmCurrent, 1, 3)
+            ),
+            Commands.sequence(
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L4),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L3),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L2),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L3),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L4),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.COLLECT),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L2),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.COLLECT),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L3),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.COLLECT),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.L4),
+                Commands.waitSeconds(0.2),
+                windmill.createTransitionCommand(WindmillConstants.TrajectoryState.STOW)
+            )
+        );
+    }
+
     public static void initialize() {
         SmartDashboard.putData("Checks/Run Collector", createCollectorTestCommand(Collector.getInstance()));
         SmartDashboard.putData("Checks/Run Indexer", createIndexerTestCommand(Indexer.getInstance()));
@@ -180,6 +216,7 @@ public class SystemCheck {
 //        SmartDashboard.putData("Checks/Run Climber", createClimberTestCommand(Climber.getInstance()));
         SmartDashboard.putData("Checks/Run Windmill", createWindmillTestCommand(Windmill.getInstance()));
         SmartDashboard.putData("Checks/Run Chassis", createChassisTestCommand(Chassis.getInstance()));
+        SmartDashboard.putData("Checks/Run Windmill Trajectories", createWindmillTrajectoryTestCommand(Windmill.getInstance()));
     }
 
     private record Measurement(String name, Supplier<Double> measure, double min, double max) {}
