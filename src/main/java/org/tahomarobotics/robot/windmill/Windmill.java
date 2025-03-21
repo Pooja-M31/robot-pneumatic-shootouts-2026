@@ -416,10 +416,19 @@ public class Windmill extends SubsystemIF {
     }
 
     public Command createResetToPreviousState() {
+        return createResetToPreviousState(false);
+    }
+
+    public Command createResetToPreviousState(boolean override) {
         return Commands.runOnce(
             () -> {
-                Logger.info("Windmill attempting to go to " + targetTrajectoryState);
-                setState(targetTrajectoryState.state);
+                if (targetTrajectoryState == TrajectoryState.L4 || targetTrajectoryState == TrajectoryState.STOW || override) {
+                    Logger.info("Windmill attempting to go to " + targetTrajectoryState);
+                    setState(targetTrajectoryState.state);
+                } else {
+                    setState(getCurrentState());
+                    Logger.info("Windmill not going to L4, so not moving.");
+                }
             }, this
         ).withName("Windmill - Reset to Target State");
     }

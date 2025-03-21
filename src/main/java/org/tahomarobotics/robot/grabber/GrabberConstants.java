@@ -32,7 +32,7 @@ public class GrabberConstants {
     public static final double ALGAE_COLLECT_VELOCITY = -10;
     public static final double SCORING_VELOCITY = 50;
     public static final double CORAL_HOLD_VOLTAGE = 0;
-    public static final double ALGAE_HOLD_VOLTAGE = -1.; // TODO when belts stop skipping change to -1.35
+    public static final double ALGAE_HOLD_VOLTAGE = -1.35;
 
     public static final double CORAL_COLLECTION_DELAY = 0.25;
     public static final double ALGAE_COLLECTION_DELAY = 0.1;

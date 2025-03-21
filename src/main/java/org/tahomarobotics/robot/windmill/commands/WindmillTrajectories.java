@@ -59,8 +59,8 @@ public class WindmillTrajectories {
 
         create(TrajectoryState.STOW, TrajectoryState.LOW_DESCORE);
         create(TrajectoryState.STOW, TrajectoryState.HIGH_DESCORE);
-        create(TrajectoryState.LOW_DESCORE, LARGE_PULLBACK, TrajectoryState.STOW, WindmillTrajectory.WindmillConstraints.ALGAE_CONSTRAINTS);
-        create(TrajectoryState.HIGH_DESCORE, LARGE_PULLBACK, TrajectoryState.STOW, WindmillTrajectory.WindmillConstraints.ALGAE_CONSTRAINTS);
+        create(TrajectoryState.LOW_DESCORE, EXTRA_LARGE_PULLBACK, TrajectoryState.STOW, WindmillTrajectory.WindmillConstraints.ALGAE_CONSTRAINTS);
+        create(TrajectoryState.HIGH_DESCORE, EXTRA_LARGE_PULLBACK, TrajectoryState.STOW, WindmillTrajectory.WindmillConstraints.ALGAE_CONSTRAINTS);
 
         create(TrajectoryState.HIGH_DESCORE, SMALL_PULLBACK, TrajectoryState.ALGAE_PRESCORE, WindmillTrajectory.WindmillConstraints.ALGAE_CONSTRAINTS);
         create(TrajectoryState.LOW_DESCORE, SMALL_PULLBACK, TrajectoryState.ALGAE_PRESCORE, WindmillTrajectory.WindmillConstraints.ALGAE_CONSTRAINTS);

@@ -207,7 +207,7 @@ public class OI extends SubsystemIF {
                                                        }
                                                    }
                                                } else {
-                                                   return windmill.createResetToPreviousState();
+                                                   return windmill.createResetToPreviousState(true);
                                                }
                                            }, Set.of(windmill)
                                        )

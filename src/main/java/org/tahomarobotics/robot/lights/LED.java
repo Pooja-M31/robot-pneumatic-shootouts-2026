@@ -82,7 +82,7 @@ public class LED extends SubsystemIF {
     }
 
     public void algae() {
-        setColor(new Color(0x55, 0xF5, 0xDB));
+        setColor(new Color(0, 1, 0.25));
     }
 
     public void sync() {
