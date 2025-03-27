@@ -51,9 +51,10 @@ public class VisionConstants {
 
     // Cameras
 
-    public final static CameraConfiguration CLIMBER_SWERVE;
-    public final static CameraConfiguration ELEVATOR_SWERVE;
+    public static CameraConfiguration CLIMBER_SWERVE;
+    public static CameraConfiguration ELEVATOR_SWERVE;
 
+    // Set default camera positions
     static {
         switch (Identity.robotID) {
             case BEARRACUDA -> {
@@ -151,11 +152,32 @@ public class VisionConstants {
 
     // Camera Configuration
 
-    public record CameraConfiguration(String name, Transform3d transform, StandardDeviationScaling stdDevScaling) {}
+    public record CameraConfiguration(String name, Transform3d transform, StandardDeviationScaling stdDevScaling) {
+        public double[] getTransformArray() {
+            return new double[] {
+                transform.getTranslation().getX(),
+                transform.getTranslation().getY(),
+                transform.getTranslation().getZ(),
+                transform.getRotation().getX(),
+                transform.getRotation().getY(),
+                transform.getRotation().getZ()
+            };
+        }
+
+        public static CameraConfiguration arrayToCameraConfiguration(double[] transform, String name, StandardDeviationScaling stdDevScaling) {
+            return new CameraConfiguration(name,
+                                           new Transform3d(
+                                               new Translation3d(transform[0], transform[1], transform[2]),
+                                               new Rotation3d(transform[3], transform[4], transform[5])
+                                           ), stdDevScaling);
+        }
+    }
 
     public interface StandardDeviationScaling {
         Vector<N3> scaleStandardDeviations(Vector<N3> stdDevs, double distance, int targetCount);
 
         StandardDeviationScaling DEFAULT = (stdDevs, distance, targetCount) -> stdDevs;
     }
+
+    public static final int CAMERA_ERROR_AVERAGE_WINDOW = 10;
 }

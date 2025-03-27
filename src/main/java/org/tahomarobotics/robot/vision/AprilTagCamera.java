@@ -32,6 +32,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N8;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -47,6 +48,7 @@ import org.photonvision.targeting.PnpResult;
 import org.tahomarobotics.robot.Robot;
 import org.tahomarobotics.robot.chassis.Chassis;
 import org.tahomarobotics.robot.chassis.ChassisConstants;
+import org.tahomarobotics.robot.util.persistent.CalibrationData;
 import org.tinylog.Logger;
 import org.tinylog.TaggedLogger;
 
@@ -101,7 +103,7 @@ public class AprilTagCamera implements AutoCloseable {
     // Camera
 
     private final String name;
-    protected final CameraConfiguration configuration;
+    protected CameraConfiguration configuration;
 
     protected final PhotonCamera camera;
     protected final PhotonCameraSim sim;
@@ -111,6 +113,8 @@ public class AprilTagCamera implements AutoCloseable {
 
     private final Consumer<EstimatedRobotPose> estimationCallback;
     private final PhotonPoseEstimator isolationPoseEstimator;
+
+    private final CalibrationData<double[]> mountPositionCalibration;
 
     @SuppressWarnings("FieldCanBeLocal")
     private final Notifier notifier;
@@ -143,6 +147,8 @@ public class AprilTagCamera implements AutoCloseable {
     private double photonvisionLatency = 0;
     @AutoLogOutput(key = "Vision/{name}/Processing Time")
     private double processingTime = 0;
+
+    private Pose3d robotPose;
 
     // Initialization
 
@@ -185,6 +191,10 @@ public class AprilTagCamera implements AutoCloseable {
             logger.error("Could not retrieve distortion coefficients! Falling back to simulation properties.");
             distortionCoefficients = simProperties.getDistCoeffs(); // ^
         }
+
+        mountPositionCalibration = new CalibrationData<>(name + "Calibration", configuration.getTransformArray());
+
+        loadConfiguration();
 
         notifier.startPeriodic(Robot.defaultPeriodSecs);
     }
@@ -275,8 +285,6 @@ public class AprilTagCamera implements AutoCloseable {
 //            logger.error(e.getMessage());
 //            return Optional.empty();
 //        }
-
-        Pose3d robotPose;
 
         EstimatedRobotPose.Type type;
         Vector<N3> stdDevs;
@@ -427,6 +435,14 @@ public class AprilTagCamera implements AutoCloseable {
         return configuration.name();
     }
 
+    public Pose3d getRobotPose() {
+        return robotPose;
+    }
+
+    public CameraConfiguration getCameraConfiguration() {
+        return configuration;
+    }
+
     // Setters
 
     void isolate(int tag) {
@@ -435,6 +451,33 @@ public class AprilTagCamera implements AutoCloseable {
 
     void globalize() {
         isolationTarget = -1;
+    }
+
+    // Configuration
+
+    public void updateConfiguration() {
+        double[] mountPosition = CameraMountEstimation.getEstimatedMountPose(configuration.name());
+        if (mountPosition == null) {
+            Logger.error("Could not retrieve camera mount position for " + configuration.name());
+            return;
+        }
+        CameraConfiguration newConfig = CameraConfiguration.arrayToCameraConfiguration(mountPosition, configuration.name(), configuration.stdDevScaling());
+        setCongfiguration(newConfig);
+    }
+
+    public void saveConfiguration() {
+        Logger.info("Saving mount position for " + configuration.name() + " with transform " + configuration.transform());
+        mountPositionCalibration.set(configuration.getTransformArray());
+    }
+
+    public void setCongfiguration(CameraConfiguration configuration) {
+        Logger.info("New configuration for " + configuration.name() + " with transform " + configuration.transform());
+        this.configuration = configuration;
+    }
+
+    public void loadConfiguration() {
+        CameraConfiguration newConfig = CameraConfiguration.arrayToCameraConfiguration(mountPositionCalibration.get(), configuration.name(), configuration.stdDevScaling());
+        setCongfiguration(newConfig);
     }
 
     // Diagnostics

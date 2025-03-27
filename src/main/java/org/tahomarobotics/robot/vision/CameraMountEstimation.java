@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.tinylog.Logger;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -37,6 +38,8 @@ import java.util.stream.Stream;
 import static org.tahomarobotics.robot.vision.VisionConstants.FIELD_LAYOUT;
 
 public class CameraMountEstimation {
+    private static final HashMap<String, double[]> mountPositions = new HashMap<>();
+
     public static Consumer<AprilTagCamera.EstimatedRobotPose> stream(Consumer<AprilTagCamera.EstimatedRobotPose> original) {
         // Whether to estimate the next AprilTag update from each camera.
         Map<String, Boolean> estimate =
@@ -46,6 +49,18 @@ public class CameraMountEstimation {
         // Initialize all of our inputs on SmartDashboard
         SmartDashboard.putData(
             "Estimate Camera Positions", Commands.runOnce(() -> estimate.replaceAll((n, v) -> true)).ignoringDisable(true)
+        );
+
+        SmartDashboard.putData(
+            "Update Camera Positions", Commands.runOnce(() -> Vision.getInstance().updateCameraConfigurations()).ignoringDisable(true)
+        );
+
+        SmartDashboard.putData(
+            "Save Camera Positions", Commands.runOnce(() -> Vision.getInstance().saveCurrentCameraConfigurations()).ignoringDisable(true)
+        );
+
+        SmartDashboard.putData(
+            "Check Camera Error", new CheckCameraErrorCommand(VisionConstants.CAMERA_ERROR_AVERAGE_WINDOW).ignoringDisable(true)
         );
 
         SmartDashboard.putNumber("Actual Chassis Pose X (Meters)", 0);
@@ -78,20 +93,24 @@ public class CameraMountEstimation {
                     Rotation3d r = cameraToRobotTransform.getRotation();
 
                     // Publish the results to SmartDashboard
-                    SmartDashboard.putNumberArray(
-                        "Camera Mount Estimation (Inches and Degrees)/" + estimatedRobotPose.cameraName(), new double[]{
-                            Units.metersToInches(t.getX()),
-                            Units.metersToInches(t.getY()),
-                            Units.metersToInches(t.getZ()),
-                            Units.radiansToDegrees(r.getX()),
-                            Units.radiansToDegrees(r.getY()),
-                            Units.radiansToDegrees(r.getZ())}
+                    mountPositions.put(
+                        estimatedRobotPose.cameraName(), new double[]{
+                            t.getX(),
+                            t.getY(),
+                            t.getZ(),
+                            r.getX(),
+                            r.getY(),
+                            r.getZ()}
                     );
+                    Logger.info(mountPositions);
+                    estimate.put(estimatedRobotPose.cameraName(), false);
                 }
-
-                estimate.put(estimatedRobotPose.cameraName(), false);
             }
             original.accept(estimatedRobotPose);
         };
+    }
+
+    public static double[] getEstimatedMountPose(String cameraName) {
+        return mountPositions.get(cameraName);
     }
 }

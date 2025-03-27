@@ -25,13 +25,16 @@ package org.tahomarobotics.robot.vision;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.*;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.PhotonUtils;
 import org.photonvision.simulation.VisionSystemSim;
 import org.tahomarobotics.robot.auto.AutonomousConstants;
 import org.tahomarobotics.robot.chassis.Chassis;
 import org.tahomarobotics.robot.util.SubsystemIF;
+import org.tahomarobotics.robot.util.persistent.CalibrationData;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -46,7 +49,7 @@ import java.util.stream.Stream;
 public class Vision extends SubsystemIF implements AutoCloseable {
     private static final Vision INSTANCE = new Vision();
 
-    private static int coralUpdatesSinceSpike = 0;
+    private static CalibrationData<double[][]> cameraConfigurations;
 
     // State
 
@@ -156,6 +159,19 @@ public class Vision extends SubsystemIF implements AutoCloseable {
         org.tinylog.Logger.info("Globalized!");
 
         aprilTagCameras.values().forEach(AprilTagCamera::globalize);
+    }
+
+    public void updateCameraConfigurations() {
+        org.tinylog.Logger.info("Starting camera configuration update.");
+        climberSwerve.updateConfiguration();
+        elevatorSwerve.updateConfiguration();
+        org.tinylog.Logger.info("Finished camera configuration update.");
+    }
+
+    public void saveCurrentCameraConfigurations() {
+        climberSwerve.saveConfiguration();
+        elevatorSwerve.saveConfiguration();
+        org.tinylog.Logger.info("Saved camera mount positions.");
     }
 
     // Simulation
