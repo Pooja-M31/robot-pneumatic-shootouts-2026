@@ -25,14 +25,14 @@ package org.tahomarobotics.robot.grabber;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import org.tahomarobotics.robot.RobotConfiguration;
 import org.tahomarobotics.robot.util.identity.Identity;
-import org.tahomarobotics.robot.windmill.WindmillConstants;
 
 public class GrabberConstants {
     public static final double CORAL_COLLECT_VELOCITY = -20;
     public static final double ALGAE_COLLECT_VELOCITY = -10;
     public static final double SCORING_VELOCITY = 50;
-    public static final double CORAL_HOLD_VOLTAGE = WindmillConstants.AEE_FEATURE ? 0 : -0.25;
+    public static final double CORAL_HOLD_VOLTAGE = RobotConfiguration.AEE_FEATURE ? 0 : -0.25;
     public static final double ALGAE_HOLD_VOLTAGE = -1.35;
 
     public static final double CORAL_COLLECTION_DELAY = 0.05;

@@ -42,6 +42,7 @@ import org.tahomarobotics.robot.util.signals.LoggedStatusSignal;
 import org.tahomarobotics.robot.util.sysid.SysIdTests;
 import org.tahomarobotics.robot.windmill.Windmill;
 import org.tahomarobotics.robot.windmill.WindmillConstants;
+import org.tinylog.Logger;
 
 import java.util.List;
 import java.util.function.DoubleSupplier;
@@ -118,6 +119,7 @@ public class Grabber extends SubsystemIF {
 
     public void setTargetState(GrabberState state) {
         this.state = state;
+        Logger.info(state);
 
         isUsingSupplier = state.usingSupplier;
 
@@ -136,7 +138,7 @@ public class Grabber extends SubsystemIF {
             if (!indexer.isBeanBakeTripped() && collectingCoral) {
                 coralCollectionTimer.start();
             }
-        } else if (state == GrabberState.ALGAE_COLLECTING && WindmillConstants.AEE_FEATURE) {
+        } else if (state == GrabberState.ALGAE_COLLECTING && RobotConfiguration.AEE_FEATURE) {
             boolean isTripped = getCurrent() > ALGAE_COLLECTION_CURRENT_THRESHOLD;
 
             if (isTripped && Collector.getInstance().getCollectionMode() != GamePiece.CORAL) {
@@ -152,7 +154,7 @@ public class Grabber extends SubsystemIF {
             }
         }
 
-        if (algaeCollectionTimer.hasElapsed(ALGAE_COLLECTION_DELAY) && WindmillConstants.AEE_FEATURE) {
+        if (algaeCollectionTimer.hasElapsed(ALGAE_COLLECTION_DELAY) && RobotConfiguration.AEE_FEATURE) {
             transitionToAlgaeHolding();
 
             Windmill.getInstance().createTransitionCommand(((WindmillConstants.TrajectoryState.STOW))).schedule();
@@ -238,6 +240,9 @@ public class Grabber extends SubsystemIF {
         return state == GrabberState.L1_SCORING;
     }
 
+    public boolean isScoring() {
+        return state == GrabberState.SCORING;
+    }
     // -- Periodic --
 
     @Override

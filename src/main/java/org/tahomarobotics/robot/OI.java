@@ -143,16 +143,29 @@ public class OI extends SubsystemIF {
         controller.rightBumper().whileTrue(
             Commands.deferredProxy(
                         () -> {
+                            int nearestIndex = AutonomousConstants.getNearestReefPoleIndex(Chassis.getInstance().getPose().getTranslation());
                             // Drive to Pose
                             AutonomousConstants.Objective pole =
-                                AutonomousConstants.getNearestReefPoleScorePosition(
-                                    Chassis.getInstance().getPose().getTranslation()
-                                ).fudgeY(switch (windmill.getTargetTrajectoryState()) {
-                                    case L4 -> Units.inchesToMeters(Math.PI / 2);
-                                    case L2, L3 -> AutonomousConstants.getAlliance() == DriverStation.Alliance.Red ? Units.inchesToMeters(2) : 0;
-                                    default -> 0;
-                                });
+                                AutonomousConstants.getObjectiveForPole(nearestIndex, AutonomousConstants.getAlliance())
+                                    .fudgeY(switch (windmill.getTargetTrajectoryState()) {
+                                        case L4 -> Units.inchesToMeters(Math.PI / 2);
+                                        case L2, L3 -> AutonomousConstants.getAlliance() == DriverStation.Alliance.Red ? Units.inchesToMeters(2) : 0;
+                                        default -> 0;
+                                    });
                             DriveToPoseV4Command dtp = pole.driveToPoseV4Command();
+
+                            boolean isHighAlgae = (nearestIndex / 2) % 2 == 0;
+
+                            Command scoreToDescore = Commands.none();
+                            if ((windmill.getTargetTrajectoryState() == WindmillConstants.TrajectoryState.L4
+                                 || windmill.getTargetTrajectoryState() == WindmillConstants.TrajectoryState.L3
+                                 || windmill.getTargetTrajectoryState() == WindmillConstants.TrajectoryState.L2)) {
+                                if (isHighAlgae) {
+                                    scoreToDescore = WindmillCommands.createScoreToHighAlgaeDescoreCommand(windmill);
+                                } else {
+                                    scoreToDescore = WindmillCommands.createScoreToLowAlgaeDescoreCommand(windmill);
+                                }
+                            }
 
                             return Commands.parallel(
                                 dtp.andThen(Commands.waitSeconds(0.75)).finallyDo(grabber::transitionToDisabled),
@@ -160,7 +173,10 @@ public class OI extends SubsystemIF {
                                     () -> dtp.getTargetWaypoint() == 1 && dtp.getDistanceToWaypoint() < AutonomousConstants.AUTO_SCORE_DISTANCE,
                                     grabber.runOnce(grabber::transitionToScoring)
                                 )
-                            );
+                            ).andThen(scoreToDescore.onlyIf(() -> (controller.y().getAsBoolean() || controller.b().getAsBoolean() || controller.a().getAsBoolean())
+                                                                  && (windmill.getTargetTrajectoryState() == WindmillConstants.TrajectoryState.L4
+                                                                      || windmill.getTargetTrajectoryState() == WindmillConstants.TrajectoryState.L3
+                                                                      || windmill.getTargetTrajectoryState() == WindmillConstants.TrajectoryState.L2)));
                         }
                     )
                     .onlyIf(() -> collector.getCollectionMode() == GamePiece.CORAL)

@@ -29,16 +29,26 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import org.tahomarobotics.robot.RobotConfiguration;
+import org.tahomarobotics.robot.auto.AutonomousConstants;
+import org.tahomarobotics.robot.auto.commands.DriveToPoseV4Command;
+import org.tahomarobotics.robot.chassis.Chassis;
 import org.tahomarobotics.robot.collector.Collector;
 import org.tahomarobotics.robot.collector.CollectorCommands;
 import org.tahomarobotics.robot.grabber.Grabber;
 import org.tahomarobotics.robot.grabber.GrabberCommands;
+import org.tahomarobotics.robot.grabber.GrabberConstants;
 import org.tahomarobotics.robot.windmill.Windmill;
 import org.tahomarobotics.robot.windmill.WindmillConstants;
 import org.tahomarobotics.robot.windmill.WindmillState;
 import org.tinylog.Logger;
 
+import java.util.Set;
+
 public class WindmillCommands {
+    static Collector collector = Collector.getInstance();
+    static Grabber grabber = Grabber.getInstance();
+
     public static Command createCalibrateCommand(Windmill windmill) {
         String FINALIZE_KEY = "Finalize";
 
@@ -105,13 +115,39 @@ public class WindmillCommands {
     public static Command createAlgaeThrowCommmand(Windmill windmill) {
         return WindmillMoveCommand.fromTo(WindmillConstants.TrajectoryState.ALGAE_PRESCORE, WindmillConstants.TrajectoryState.ALGAE_SCORE)
                                   .orElse(Commands.none())
-            .alongWith(GrabberCommands.createGrabberScoringCommands(Grabber.getInstance()).getFirst());
+            .alongWith(GrabberCommands.createGrabberScoringCommands(grabber).getFirst());
+    }
+
+    public static Command createScoreToHighAlgaeDescoreCommand(Windmill windmill) {
+        return Commands.waitUntil(() -> !grabber.isScoring())
+                       .andThen(windmill.createTransitionCommand(WindmillConstants.TrajectoryState.HIGH_DESCORE))
+                       .andThen(Commands.runOnce(() -> grabber.setTargetState((RobotConfiguration.AEE_FEATURE) ? GrabberConstants.GrabberState.ALGAE_COLLECTING : GrabberConstants.GrabberState.CORAL_COLLECTING)))
+                       .andThen(Commands.defer(() -> new DriveToPoseV4Command(
+                           -1,
+                           0,
+                           AutonomousConstants.getNearestReefCenterPosition(Chassis.getInstance().getPose().getTranslation())), Set.of(Chassis.getInstance())))
+                       .andThen(Commands.waitSeconds(2))
+                       .andThen(windmill.createTransitionCommand(WindmillConstants.TrajectoryState.STOW))
+                       .andThen(Commands.runOnce(() -> grabber.setTargetState(GrabberConstants.GrabberState.DISABLED)));
+    }
+
+    public static Command createScoreToLowAlgaeDescoreCommand(Windmill windmill) {
+        return Commands.waitUntil(() -> !grabber.isScoring())
+                       .andThen(windmill.createTransitionCommand(WindmillConstants.TrajectoryState.LOW_DESCORE))
+                       .andThen(Commands.runOnce(() -> grabber.setTargetState((RobotConfiguration.AEE_FEATURE) ? GrabberConstants.GrabberState.ALGAE_COLLECTING : GrabberConstants.GrabberState.CORAL_COLLECTING)))
+                       .andThen(Commands.defer(() -> new DriveToPoseV4Command(
+                           -1,
+                           0,
+                           AutonomousConstants.getNearestReefCenterPosition(Chassis.getInstance().getPose().getTranslation())), Set.of(Chassis.getInstance())))
+                       .andThen(Commands.waitSeconds(2))
+                       .andThen(windmill.createTransitionCommand(WindmillConstants.TrajectoryState.STOW))
+                       .andThen(Commands.runOnce(() -> grabber.setTargetState(GrabberConstants.GrabberState.DISABLED)));
     }
 
     public static Command createAlgaePassoffCommand(Windmill windmill) {
         return windmill.createTransitionCommand(WindmillConstants.TrajectoryState.ALGAE_PASSOFF)
-                       .andThen(CollectorCommands.createEjectCommands(Collector.getInstance()).getFirst()
-                                    .alongWith(GrabberCommands.createGrabberCommands(Grabber.getInstance()).getFirst()))
+                       .andThen(CollectorCommands.createEjectCommands(collector).getFirst()
+                                    .alongWith(GrabberCommands.createGrabberCommands(grabber).getFirst()))
             .andThen(Commands.runOnce(() -> windmill.setState(new WindmillState(0,
                                                                                 new WindmillState.ElevatorState(WindmillConstants.TrajectoryState.ALGAE_PASSOFF.elev, 0, 0),
                                                                                 new WindmillState.ArmState(Units.degreesToRadians(360) + WindmillConstants.TrajectoryState.ALGAE_PRESCORE.arm, 0, 0)))))

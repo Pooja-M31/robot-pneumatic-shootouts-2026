@@ -45,6 +45,7 @@ import java.util.stream.IntStream;
 public class AutonomousConstants {
     /** A horizontal shift on the robot's position relative to reef poles. */
     public static final double DEFAULT_REEF_HORIZONTAL_ALIGNMENT_FUDGE = Units.inchesToMeters(0);
+    public static final double DEFAULT_REEF_CENTER_FUDGE = Units.inchesToMeters(0);
     public static final double FUDGE_INCREMENT = 0.25; // Inches
 
     // Spike marks to avoid in coral detection
@@ -95,10 +96,12 @@ public class AutonomousConstants {
     public static List<Translation2d> RED_REEF_APPROACH_POLES;
     public static List<Translation2d> RED_REEF_SCORE_POLES;
     private static List<Translation2d> BLUE_REEF_APPROACH_POLES, BLUE_REEF_SCORE_POLES;
+    public static List<Translation2d> RED_REEF_CENTER_POSITIONS, BLUE_REEF_CENTER_POSITIONS;
 
     static {
         computeCoralStationWaypoints();
         computePolePositions(DEFAULT_REEF_HORIZONTAL_ALIGNMENT_FUDGE);
+        computeReefCenterPositions(DEFAULT_REEF_CENTER_FUDGE);
     }
 
     public static void computeCoralStationWaypoints() {
@@ -136,6 +139,29 @@ public class AutonomousConstants {
         Collections.rotate(BLUE_REEF_SCORE_POLES, 6);
     }
 
+    public static void computeReefCenterPositions(double fudge) {
+        List<Translation2d> CENTER_POSITIONS =
+            (IntStream.range(0, 6))
+                .mapToObj(i -> new Translation2d(
+                    SCORE_DISTANCE_FROM_CENTER, 0 - fudge
+                ).rotateBy(Rotation2d.fromDegrees(60).times(i + 3)))
+                .toList();
+
+        RED_REEF_CENTER_POSITIONS = CENTER_POSITIONS.stream().map(p -> p.plus(RED_REEF_CENTER)).collect(Collectors.toList());
+
+        BLUE_REEF_CENTER_POSITIONS = CENTER_POSITIONS.stream().map(p -> p.plus(BLUE_REEF_CENTER)).collect(Collectors.toList());
+    }
+
+    public static int getNearestReefPoleIndex(Translation2d currentTranslation) {
+        DriverStation.Alliance alliance = getAlliance();
+
+        var approachPoles = alliance == DriverStation.Alliance.Blue ? BLUE_REEF_APPROACH_POLES : RED_REEF_APPROACH_POLES;
+
+        Translation2d approach = currentTranslation.nearest(approachPoles);
+
+        return approachPoles.indexOf(approach);
+    }
+
     public static Objective getNearestReefPoleScorePosition(Translation2d currentTranslation) {
         DriverStation.Alliance alliance = getAlliance();
 
@@ -145,6 +171,21 @@ public class AutonomousConstants {
         int index = approachPoles.indexOf(approach);
 
         return getObjectiveForPole(index, alliance);
+    }
+
+    public static Pose2d getNearestReefCenterPosition(Translation2d currentTranslation) {
+        DriverStation.Alliance alliance = getAlliance();
+
+        var centerPositions = alliance == DriverStation.Alliance.Blue ? BLUE_REEF_CENTER_POSITIONS : RED_REEF_CENTER_POSITIONS;
+
+        Translation2d target = currentTranslation.nearest(centerPositions);
+        org.littletonrobotics.junction.Logger.recordOutput("Autonomous/targetPos", Translation2d.struct, target);
+        int index = centerPositions.indexOf(target);
+
+        Rotation2d angle = Rotation2d.fromDegrees(60).times(index)
+                                     .plus(alliance == DriverStation.Alliance.Blue ? Rotation2d.kZero : Rotation2d.k180deg);
+
+        return new Pose2d(target, angle);
     }
 
     public static Objective getObjectiveForPole(int poleIndex, DriverStation.Alliance alliance) {

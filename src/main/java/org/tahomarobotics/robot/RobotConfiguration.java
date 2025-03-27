@@ -30,6 +30,7 @@ public class RobotConfiguration {
     // -- Staging Feature Flags --
 
     public static final boolean FEATURE_CORAL_DETECTION = true;
+    public static final boolean AEE_FEATURE = false;
 
     // -- Deploy Directory --
     public static final File DEPLOY_DIR = Filesystem.getDeployDirectory();

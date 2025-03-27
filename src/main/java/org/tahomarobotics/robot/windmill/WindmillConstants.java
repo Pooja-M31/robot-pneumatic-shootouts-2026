@@ -31,8 +31,6 @@ import org.tahomarobotics.robot.util.identity.Identity;
 
 public class WindmillConstants {
 
-    public static final boolean AEE_FEATURE = false;
-
     // -- Elevator --
 
     // States
@@ -70,8 +68,8 @@ public class WindmillConstants {
         public final WindmillState state;
 
         TrajectoryState(double elevAEE, double armAEE, double elevSEE, double armSEE) {
-            this.elev = (AEE_FEATURE) ? elevAEE : elevSEE;
-            this.arm = (AEE_FEATURE) ? armAEE : armSEE;
+            this.elev = (RobotConfiguration.AEE_FEATURE) ? elevAEE : elevSEE;
+            this.arm = (RobotConfiguration.AEE_FEATURE) ? armAEE : armSEE;
             this.state = new WindmillState(
                 0,
                 new WindmillState.ElevatorState(elev, 0, 0),

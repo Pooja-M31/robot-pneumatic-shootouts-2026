@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.tahomarobotics.robot.RobotConfiguration;
 import org.tahomarobotics.robot.RobotMap;
+import org.tahomarobotics.robot.chassis.Chassis;
 import org.tahomarobotics.robot.lights.LED;
 import org.tahomarobotics.robot.util.RobustConfigurator;
 import org.tahomarobotics.robot.util.SubsystemIF;
@@ -50,8 +51,7 @@ import java.util.List;
 
 import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
-import static org.tahomarobotics.robot.auto.AutonomousConstants.RED_REEF_APPROACH_POLES;
-import static org.tahomarobotics.robot.auto.AutonomousConstants.RED_REEF_SCORE_POLES;
+import static org.tahomarobotics.robot.auto.AutonomousConstants.*;
 import static org.tahomarobotics.robot.collector.CollectorConstants.*;
 
 public class Collector extends SubsystemIF {
@@ -340,10 +340,6 @@ public class Collector extends SubsystemIF {
 
     @Override
     public void periodic() {
-        List<Pose2d> approachPoles = RED_REEF_APPROACH_POLES.stream().map(t -> new Pose2d(t, new Rotation2d())).toList();
-        List<Pose2d> scorePoles = RED_REEF_SCORE_POLES.stream().map(t -> new Pose2d(t, new Rotation2d())).toList();
-        org.littletonrobotics.junction.Logger.recordOutput("Autonomous/Approach Poles", Pose2d.struct, approachPoles.toArray(new Pose2d[0]));
-        org.littletonrobotics.junction.Logger.recordOutput("Autonomous/Score Poles", Pose2d.struct, scorePoles.toArray(new Pose2d[0]));
         LoggedStatusSignal.refreshAll(statusSignals);
         LoggedStatusSignal.log("Collector/", statusSignals);
 
