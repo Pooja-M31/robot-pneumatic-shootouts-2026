@@ -29,6 +29,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.Timer;
@@ -94,6 +95,8 @@ public class Grabber extends SubsystemIF {
     private boolean isUsingSupplier = false;
     private DoubleSupplier velocitySupplier;
 
+    private final Debouncer coralDetectionDebouncer = new Debouncer(CORAL_COLLECTION_DELAY);
+
     // -- Initialization --
 
     private Grabber() {
@@ -148,16 +151,16 @@ public class Grabber extends SubsystemIF {
 
     private void stateMachine() {
         if (state == GrabberState.CORAL_COLLECTING) {
-            if (RobotConfiguration.FEATURE_ALGAE_END_EFFECTOR) {
-                if (isCoralDetected()) {
+            if (!RobotConfiguration.FEATURE_BEAN_BAKE) {
+                if (coralDetectionDebouncer.calculate(isInRange())) {
                     transitionToCoralHolding();
                 }
             } else {
-                if (indexer.isBeanBakeTripped() && !collectingCoral) {
+                if (coralDetectionDebouncer.calculate(indexer.isBeanBakeTripped()) && !collectingCoral) {
                     collectingCoral = true;
                 }
                 if (!indexer.isBeanBakeTripped() && collectingCoral) {
-                    coralCollectionTimer.start();
+                    transitionToCoralHolding();
                 }
             }
         } else if (state == GrabberState.ALGAE_COLLECTING && RobotConfiguration.FEATURE_ALGAE_END_EFFECTOR) {
@@ -185,15 +188,13 @@ public class Grabber extends SubsystemIF {
             algaeCollectionTimer.reset();
         }
 
-        if (!RobotConfiguration.FEATURE_ALGAE_END_EFFECTOR) {
-            if (coralCollectionTimer.hasElapsed(CORAL_COLLECTION_DELAY)) {
-                transitionToCoralHolding();
-                indexer.transitionToDisabled();
+        if (coralCollectionTimer.hasElapsed(CORAL_COLLECTION_DELAY)) {
+            transitionToCoralHolding();
+            indexer.transitionToDisabled();
 
-                collectingCoral = false;
-                coralCollectionTimer.stop();
-                coralCollectionTimer.reset();
-            }
+            collectingCoral = false;
+            coralCollectionTimer.stop();
+            coralCollectionTimer.reset();
         }
     }
 
@@ -207,6 +208,7 @@ public class Grabber extends SubsystemIF {
     }
 
     public void transitionToCoralHolding() {
+        collectingCoral = false;
         setTargetState(GrabberState.CORAL_HOLDING);
     }
 
@@ -280,6 +282,7 @@ public class Grabber extends SubsystemIF {
             || state == GrabberState.L1_SCORING;
     }
 
+    @AutoLogOutput(key="Grabber/Is Coral Detected?")
     public boolean isCoralDetected() {
         return state == GrabberState.CORAL_COLLECTING
                && windmill.getTargetTrajectoryState() == WindmillConstants.TrajectoryState.CORAL_COLLECT
@@ -291,8 +294,9 @@ public class Grabber extends SubsystemIF {
         return distance.getValueAsDouble();
     }
 
+    @AutoLogOutput(key="Grabber/Is CANRange Tripped?")
     public boolean isInRange() {
-        return detection.getValue();
+        return Math.abs(getRange() - CORAL_CANRANGE_DISTANCE) < CORAL_CANRANGE_DISTANCE_TOLERANCE;
     }
 
     // -- Periodic --
