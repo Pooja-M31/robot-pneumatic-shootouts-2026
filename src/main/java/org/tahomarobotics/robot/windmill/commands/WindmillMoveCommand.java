@@ -117,6 +117,7 @@ public class WindmillMoveCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
+        windmill.setState(fromTo.getSecond().state);
         windmill.setIsRunningTrajectory(false);
         Logger.info("Ran trajectory: '{}'", trajectory.name);
     }
