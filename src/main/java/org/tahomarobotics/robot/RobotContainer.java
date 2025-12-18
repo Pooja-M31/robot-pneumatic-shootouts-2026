@@ -24,13 +24,36 @@
 
 package org.tahomarobotics.robot;
 
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.tahomarobotics.robot.util.FireShooterCommand;
+import org.tahomarobotics.robot.util.PneumaticShootouts;
+import org.tahomarobotics.robot.util.RetractCommand;
+
 public class RobotContainer implements AutoCloseable {
 
     public final OI oi;
 
+    public static class OI {
+
+        private final XboxController controller = new XboxController(0);
+        private final PneumaticShootouts shooter = new PneumaticShootouts();
+
+        public OI() {
+            configureBindings();
+        }
+
+        private void configureBindings() {
+            new Trigger(() -> controller.getAButton())
+                .onTrue(new FireShooterCommand(shooter));
+
+            Trigger trigger = new Trigger(() -> controller.getBButton())
+                .onTrue(new RetractCommand(shooter));
+        }
+    }
 
     public RobotContainer() {
-        oi = new OI(this);
+        oi = new OI();
     }
 
     @Override

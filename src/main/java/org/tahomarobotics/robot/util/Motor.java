@@ -1,4 +1,4 @@
-package org.tahomarobotics.robot.util;/*
+/*
  * Copyright 2025 Tahoma Robotics
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,16 +19,27 @@ package org.tahomarobotics.robot.util;/*
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package org.tahomarobotics.robot.util;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 
+public class Motor {
 
-public class RobotMap {
-    public static final int LEFT_FORWARD = 1;
-    public static final int LEFT_REVERSE = 2;
-    public static final int RIGHT_FORWARD = 3;
-    public static final int RIGHT_REVERSE = 4;
+    private final TalonFX motor;
+    private final DutyCycleOut request = new DutyCycleOut(0);
 
-        public static final int SHOOTER_SOLENOID_CHANNEL = 5;
+    public Motor(int deviceID) { motor = new TalonFX(deviceID);
     }
 
 
+    public void setSpeed(double speed) {
+        request.Output = speed;
+        motor.setControl(request);
+    }
 
+
+    public void stop () {
+        request.Output = 0;
+        motor.setControl(request);
+    }
+}

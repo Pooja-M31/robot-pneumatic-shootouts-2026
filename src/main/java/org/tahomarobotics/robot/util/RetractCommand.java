@@ -20,21 +20,17 @@
  * THE SOFTWARE.
  */
 
-package org.tahomarobotics.robot;
+package org.tahomarobotics.robot.util;
 
-import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Filesystem;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 
-import java.io.File;
+public class RetractCommand {
 
-public class RobotConfiguration {
-    // -- Deploy Directory --
-    public static final File DEPLOY_DIR = Filesystem.getDeployDirectory();
+    public static class RetractShooterCommand extends InstantCommand {
+        public RetractShooterCommand(PneumaticShooterSubsystem shooter) {
+            super(shooter::retract, shooter);
+        }
+    }
 
-    // -- Devices --
-    public static final String CANBUS_NAME = "CANivore";
-
-    // -- Update Frequencies --
-    public static final double ODOMETRY_UPDATE_FREQUENCY = 250;
-    public static final double MECHANISM_UPDATE_FREQUENCY = 100;
 }
+

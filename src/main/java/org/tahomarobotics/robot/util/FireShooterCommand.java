@@ -1,4 +1,4 @@
-package org.tahomarobotics.robot.util;/*
+/*
  * Copyright 2025 Tahoma Robotics
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,15 +20,13 @@ package org.tahomarobotics.robot.util;/*
  * THE SOFTWARE.
  */
 
+package org.tahomarobotics.robot.util;
 
-public class RobotMap {
-    public static final int LEFT_FORWARD = 1;
-    public static final int LEFT_REVERSE = 2;
-    public static final int RIGHT_FORWARD = 3;
-    public static final int RIGHT_REVERSE = 4;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 
-        public static final int SHOOTER_SOLENOID_CHANNEL = 5;
+public class FireShooterCommand extends InstantCommand {
+    public FireShooterCommand(PneumaticShootouts shooter) {
+        super(shooter::shoot, (Subsystem) shooter);
     }
-
-
-
+}
